@@ -1,32 +1,32 @@
 #' Estimating the sizes of populations who inject drugs
 #' from multiple data sources using a Bayesian hierarchical model.
 #'
-#' This R package is for reproducing Bao L, Raftery A, Reddy A. (2015) Estimating the Sizez of Populations At Risk of HIV Infection From Multiple Data Sources Using a Bayesian Hierarchical Model, Stat Inference. This function develops an algorithm for presenting a Bayesian hierarchical
-#' model for estimating the sizes of national drug injected
+#' This R package is for reproducing Bao L, Raftery A, Reddy A. (2015) Estimating the Sizes of Populations At Risk of HIV Infection From Multiple Data Sources Using a Bayesian Hierarchical Model, Statistics and Its Interface. This function develops an algorithm for presenting a Bayesian hierarchical
+#' model for estimating the sizes of drug injected
 #' populations in Bangladesh. The model incorporates multiple commonly used data sources
 #' including mapping data, surveys, interventions, capture-recapture data,
-#' estimates or guesstimates from organizations, and expert opinion. This function not only gives you total number of people who inject drugs but also 95 Bayesian confidence interval.
+#' estimates or guesstimates from organizations, and expert opinion. This function provides the posterior samples of burnin thin at-risk population sizes at the subnational level.
 #'
 #' @param DATA dataset from Bangladesh which used in Bao L, Raftery A, Reddy A. (2015) Estimating the Sizez of Populations At Risk of HIV Infection From Multiple Data Sources Using a Bayesian Hierarchical Model, Statistics and Its Interface.
 #' @param size the number of iteration in MCMC algorithm.
-#' @param keepa the number of Burn-In in MCMC algorithm.
-#' @param interv keep every interv-th scan.
-#' @return A vector of the number of estimate people who inject drugs in Bangladesh. And 95 percent Bayesian confidence interval for the national number of people who inject drugs.
-#' @author Le Bao, Kyongwon Kim
+#' @param burnin the number of Burn-In in MCMC algorithm.
+#' @param thin keep every thin-th scan.
+#' @return A matrix of posterior samples of at-risk population sizes at the sub-national level, where the rows correspond to sub-national areas and the columns correspond to MCMC iterations. 
+#' @author Le Bao, Adrian E. Raftery, Kyongwon Kim
 #' @details
 #' This function runs MCMC algorithm for reproducing Bao L, Raftery A, Reddy A. (2015) Estimating the Sizez of Populations At Risk of HIV Infection From Multiple Data Sources Using a Bayesian Hierarchical Model, Statistics and Its Interface.
-#' @references Bao L, Raftery A, Reddy A. Estimating the Sizez of Populations At Risk of HIV Infection From Multiple Data Sources Using a Bayesian Hierarchical Model, Stat Inference, 2015.
+#' @references Bao L, Raftery A, Reddy A. (2015) Estimating the Sizes of Populations At Risk of HIV Infection From Multiple Data Sources Using a Bayesian Hierarchical Model, Statistics and Its Interface.
 #' @seealso \code{\link{rtnorm} \link{rinvgamma} \link{dtnorm}}
 #' @export
 #' @importFrom msm rtnorm dtnorm
 #' @importFrom MCMCpack rinvgamma
 #' @importFrom stats rbeta rbinom dbinom dbeta rnbinom rpois dpois dnbinom dnorm runif rnorm cor quantile
 #' @importFrom graphics par hist rect text
-#' @examples #n.total=sizeestima(DATA,5000000,501,100)
+#' @examples #n.total=sizeestima(DATA,500000,501,100)
 
 
 
-sizeestima <- function( DATA,size, keepa,interv ) {
+sizeestima <- function( DATA,size, burnin,thin) {
 
   data = DATA[which(DATA[,4]>-1 | DATA[,8]>-1),]
   N = data[,3]
@@ -277,7 +277,7 @@ sizeestima <- function( DATA,size, keepa,interv ) {
     text(horizontal, vertical, format(cor(x,y), digits=2), cex=3)
   }
 
-  keep = seq(keepa, size, interv)
+  keep = seq(burnin, size, thin)
   N.r = DATA$PopSize[-which(DATA$NASROB>-1 | DATA$RSA>-1)]
   phi.r = n.r = NULL
   for (i in 1:length(N.r)){
@@ -286,9 +286,8 @@ sizeestima <- function( DATA,size, keepa,interv ) {
     phi.r = cbind(phi.r, phi.i)
     n.r = cbind(n.r, n.i)
   }
-  n.total = apply(cbind(n[keep,], n.r), 1, sum)
-  print(c(rho,quantile(n.total, c(0.025, 0.5, 0.975))))
-  return(n.total)
+ 
+  return(cbind(n[keep,], n.r))
 
 }
 
